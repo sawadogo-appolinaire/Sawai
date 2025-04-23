@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" translate="no" suppressHydrationWarning>
         <head>
           <link
             rel="stylesheet"

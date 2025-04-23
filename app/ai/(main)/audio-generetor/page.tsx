@@ -29,15 +29,15 @@ const Page = () => {
 
   const { open } = UseRequestNumberExpiredModal();
 
-  const { data } = useQuery<audioGenerateType>({
+  const { data, isLoading: isAudioDataLoading } = useQuery<audioGenerateType>({
     queryKey: ["get-audio-data"],
     queryFn: async () =>
       axios.get("/api/get-audio-data").then((resp) => resp.data),
   });
 
-  const { mutate: onSubmit, isLoading } = useMutation({
+  const { mutate: onSubmit, isLoading: isSubmitLoading } = useMutation({
     mutationFn: async () => {
-      if (!prompt || isLoading || !isLoaded) return;
+      if (!prompt || isAudioDataLoading || !isLoaded) return;
       setPrompt("");
       const data = await axios
         .post("/api/audio-generator", { prompt: prompt })
@@ -60,7 +60,7 @@ const Page = () => {
     },
   });
 
-  if (!isLoaded || !rended) {
+  if (!isLoaded || isAudioDataLoading || !rended) {
     return (
       <div className="w-full h-full flex items-center justify-center text-center">
         <Loader2 className="text-muted-foreground h-7 w-7 animate-spin" />
@@ -70,7 +70,7 @@ const Page = () => {
 
   return (
     <div className="px-[20%] max-xl:px-[15%] max-lg:px-[15%] max-md:px-[10%] max-sm:px-6 h-full w-full relative">
-      {data?.length === 0 && !isLoading ? (
+      {data?.length === 0 && !isSubmitLoading ? (
         <div className="flex flex-col items-center justify-center w-full h-full">
           <div className="rounded-lg p-8 max-w-md w-full text-center">
             <h1 className="text-3xl font-semibold text-color mb-4">
@@ -154,10 +154,10 @@ const Page = () => {
           <div
             className={cn(
               "flex flex-col gap-10 w-full mb-12",
-              !isLoading ? "h-12" : "mt-10"
+              !isSubmitLoading ? "h-12" : "mt-10"
             )}
           >
-            {isLoading && (
+            {isSubmitLoading && (
               <>
                 <div>
                   <Skeleton className="w-12 h-12 rounded-full mb-4 bg-[#d8d8d8] bg-opacity-25" />
