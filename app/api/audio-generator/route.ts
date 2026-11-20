@@ -25,9 +25,10 @@ export async function POST(req: Request) {
 
     const userRequestStatus = await prisma.user.findUnique({
       where: {
-        id: userId,
+        clerkId: userId,
       },
       select: {
+        id: true,
         toDayRequest: true,
         requestGestion: true,
       },
@@ -46,12 +47,12 @@ export async function POST(req: Request) {
       await prisma.audioGenerator.createMany({
         data: [
           {
-            userId: (await user).userId as string,
+            userId: userRequestStatus.id,
             who: "YOU",
             content: body.prompt,
           },
           {
-            userId: (await user).userId as string,
+            userId: userRequestStatus.id,
             who: "Ai",
             audioUrl: audioUrl,
           },
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
       if (!userRequestStatus.requestGestion) {
         await prisma.requestGestion.create({
           data: {
-            userId: userId,
+            userId: userRequestStatus.id,
             EndRequestTime: tomorrow,
           },
         });
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
 
       await prisma.user.update({
         where: {
-          id: userId,
+          id: userRequestStatus.id,
         },
         data: {
           toDayRequest: {
@@ -82,12 +83,23 @@ export async function POST(req: Request) {
     } else {
       return NextResponse.json(
         { todayRequestNumberSupTen: true },
-        { status: 200 }
+        { status: 200 },
       );
     }
-  } catch (error) {
-    if (error instanceof Error) console.log(error.message);
+  } catch (error: any) {
+    console.error("\n========== AUDIO GENERATOR ROUTE ERROR ==========");
+    console.error("Message:", error?.message);
+    console.error("Name:", error?.name);
+    console.error("Stack:", error?.stack);
+    console.dir(error, { depth: 10 });
+    console.error("=================================================\n");
 
-    return NextResponse.json("Request failed.", { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Request failed.",
+        details: error?.message ?? "Unknown error",
+      },
+      { status: 500 },
+    );
   }
 }

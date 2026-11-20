@@ -4,36 +4,50 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const user = auth();
+    const { userId } = await auth();
 
-    if (!(await user).userId) {
+    if (!userId) {
       return NextResponse.json("You are not authorized to make a request.", {
-        status: 500,
+        status: 401,
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json("User not found.", {
+        status: 404,
       });
     }
 
     const data = await prisma.audioGenerator.findMany({
       where: {
-        userId: (await user).userId as string,
+        userId: user.id,
       },
       select: {
+        id: true,
         who: true,
         content: true,
         audioUrl: true,
       },
+      orderBy: {
+        dateTime: "asc",
+      },
     });
 
-    if (!data)
-      return NextResponse.json("Get audio generator data failed.", {
-        status: 500,
-      });
-
-    return NextResponse.json(data, {
-      status: 200,
-    });
+    return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    if (error instanceof Error) console.log(error.message);
+    console.error("GET AUDIO DATA ERROR:", error);
 
-    return NextResponse.json("Request failed.", { status: 500 });
+    return NextResponse.json("Request failed.", {
+      status: 500,
+    });
   }
 }

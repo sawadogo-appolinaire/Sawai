@@ -1,51 +1,60 @@
-import { ElevenLabsClient } from "elevenlabs";
-import { createWriteStream, existsSync, mkdirSync } from "fs";
+import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-
 import { v4 as uuid } from "uuid";
-
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-
-const client = new ElevenLabsClient({
-  apiKey: ELEVENLABS_API_KEY,
-});
-
 export const createAudioFileFromText = async (
-  text: string
+  text: string,
 ): Promise<string> => {
-  return new Promise<string>(async (resolve, reject) => {
-    try {
-      const audio = await client.generate({
-        voice: "Rachel",
-        model_id: "eleven_turbo_v2_5",
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("ELEVENLABS_API_KEY is missing");
+  }
+
+  const voiceId = "sZUkQbT82d4SmH6xapFU";
+
+  const response = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+    {
+      method: "POST",
+      headers: {
+        "xi-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         text,
-      });
+        model_id: "eleven_turbo_v2_5",
+      }),
+    },
+  );
 
-      const publicFolderPath = path.join(
-        process.cwd(),
-        "public",
-        "user-audio-generate"
-      );
+  if (!response.ok) {
+    const errorDetails = await response.text();
 
-      // Ensure the folder exists
-      if (!existsSync(publicFolderPath)) {
-        mkdirSync(publicFolderPath, { recursive: true });
-      }
+    console.error("========== ELEVENLABS API ERROR ==========");
+    console.error("HTTP Status:", response.status);
+    console.error("Response:", errorDetails);
+    console.error("==========================================");
 
-      const fileName = `${uuid()}.mp3`;
-      const filePath = path.join(publicFolderPath, fileName); // Full path to save the file in 'public/user-audio-generate'
+    throw new Error(`ElevenLabs HTTP ${response.status}: ${errorDetails}`);
+  }
 
-      const fileStream = createWriteStream(filePath); // Use the full file path to save in the target folder
+  const audioBuffer = Buffer.from(await response.arrayBuffer());
 
-      audio.pipe(fileStream);
-      fileStream.on("finish", () => resolve(fileName)); // Resolve with the fileName
-      fileStream.on("error", reject);
-    } catch (error) {
-      reject(error);
-    }
-  });
+  const publicFolderPath = path.join(
+    process.cwd(),
+    "public",
+    "user-audio-generate",
+  );
+
+  await mkdir(publicFolderPath, { recursive: true });
+
+  const fileName = `${uuid()}.mp3`;
+
+  await writeFile(path.join(publicFolderPath, fileName), audioBuffer);
+
+  return fileName;
 };

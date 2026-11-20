@@ -56,7 +56,7 @@ const MainSidebar = ({ isMobile }: { isMobile: boolean }) => {
     <div
       className={cn(
         " flex flex-col justify-between text-color min-w-80 bg-[#27282A] h-screen py-10 pr-4 pl-6 border-r border-[#58595A] overflow-y-auto",
-        !isMobile && "max-lg:hidden"
+        !isMobile && "max-lg:hidden",
       )}
     >
       <div>
@@ -67,7 +67,7 @@ const MainSidebar = ({ isMobile }: { isMobile: boolean }) => {
               <div
                 className={cn(
                   "w-full p-4 flex items-center gap-3 hover:bg-[#39393C] rounded-lg text-base font-medium",
-                  pathName.includes(data.link) && "bg-[#39393C]"
+                  pathName.includes(data.link) && "bg-[#39393C]",
                 )}
               >
                 {data.icon}
@@ -161,7 +161,7 @@ const MainSidebar = ({ isMobile }: { isMobile: boolean }) => {
         </div>
       </div>
       <Link
-        href={"https://github.com/Appolinaire-SAWADOGO"}
+        href={"https://github.com/sawadogo-appolinaire"}
         className="group pt-14"
       >
         <span className="text-color font-normal text-center max-sm:text-base flex items-center gap-2">

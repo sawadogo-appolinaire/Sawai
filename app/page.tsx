@@ -64,7 +64,7 @@ export default function Home() {
       <div className="w-full flex flex-col gap-2 items-center text-center justify-center">
         <div className="border-t-4 border-dashed border-[#4e4e4f] w-56"></div>
         <Link
-          href={"https://github.com/Appolinaire-SAWADOGO"}
+          href={"https://github.com/sawadogo-appolinaire"}
           className="group"
         >
           <span className="text-color opacity-70 font-normal text-center max-sm:text-base flex items-center gap-2">
