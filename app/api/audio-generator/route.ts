@@ -42,8 +42,7 @@ export async function POST(req: Request) {
     }
 
     if (userRequestStatus.toDayRequest < 10) {
-      const audioName = await createAudioFileFromText(body.prompt);
-      const audioUrl = `/user-audio-generate/${audioName}`;
+      const audioUrl = await createAudioFileFromText(body.prompt);
 
       await prisma.audioGenerator.createMany({
         data: [

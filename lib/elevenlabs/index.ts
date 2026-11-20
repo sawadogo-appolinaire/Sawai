@@ -1,5 +1,4 @@
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 import { v4 as uuid } from "uuid";
 import * as dotenv from "dotenv";
 
@@ -44,17 +43,10 @@ export const createAudioFileFromText = async (
 
   const audioBuffer = Buffer.from(await response.arrayBuffer());
 
-  const publicFolderPath = path.join(
-    process.cwd(),
-    "public",
-    "user-audio-generate",
-  );
+  const blob = await put(`user-audio-generate/${uuid()}.mp3`, audioBuffer, {
+    access: "private",
+    contentType: "audio/mpeg",
+  });
 
-  await mkdir(publicFolderPath, { recursive: true });
-
-  const fileName = `${uuid()}.mp3`;
-
-  await writeFile(path.join(publicFolderPath, fileName), audioBuffer);
-
-  return fileName;
+  return blob.pathname;
 };

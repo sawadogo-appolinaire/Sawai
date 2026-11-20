@@ -100,7 +100,7 @@ const Page = () => {
                 key={index}
                 className={cn(
                   "flex flex-col h-auto bg-[#27282A] w-full p-5 rounded-lg font-normal",
-                  data.who === "Ai" ? "bg-opacity-0 border-none" : "ml-auto"
+                  data.who === "Ai" ? "bg-opacity-0 border-none" : "ml-auto",
                 )}
               >
                 <Avatar>
@@ -124,7 +124,7 @@ const Page = () => {
                     {data.content}
                   </p>
                 ) : (
-                  <div className="flex xl:w-4/5  w-full items-center gap-2 rounded-lg mt-8 bg-[#27282A] pr-3 py-2 bg-opacity-40">
+                  <div className="flex xl:w-4/5 w-full items-center gap-2 rounded-lg mt-8 bg-[#27282A] pr-3 py-2 bg-opacity-40">
                     <AudioPlayer
                       style={{
                         borderRadius: 2,
@@ -135,11 +135,11 @@ const Page = () => {
                       width={"90%"}
                       color="#BEBEBE"
                       sliderColor="#BEBEBE"
-                      src={data.audioUrl}
+                      src={`/api/audio/${data.id}`}
                     />
 
                     <a
-                      href={data.audioUrl}
+                      href={`/api/audio/${data.id}`}
                       download
                       className="flex text-[#BEBEBE] w-7 h-7 mb-1 cursor-pointer"
                       aria-label="Download Audio"
@@ -154,7 +154,7 @@ const Page = () => {
           <div
             className={cn(
               "flex flex-col gap-10 w-full mb-12",
-              !isSubmitLoading ? "h-12" : "mt-10"
+              !isSubmitLoading ? "h-12" : "mt-10",
             )}
           >
             {isSubmitLoading && (
@@ -163,7 +163,7 @@ const Page = () => {
                   <Skeleton className="w-12 h-12 rounded-full mb-4 bg-[#d8d8d8] bg-opacity-25" />
                   <Skeleton
                     className={cn(
-                      "flex flex-col h-24 bg-[#d8d8d8] bg-opacity-25 w-full p-5 rounded-lg font-normal"
+                      "flex flex-col h-24 bg-[#d8d8d8] bg-opacity-25 w-full p-5 rounded-lg font-normal",
                     )}
                   />
                 </div>
@@ -171,7 +171,7 @@ const Page = () => {
                   <Skeleton className="w-12 h-12 rounded-full mb-4 bg-[#d8d8d8] bg-opacity-25" />
                   <Skeleton
                     className={cn(
-                      "flex flex-col h-24 bg-[#d8d8d8] bg-opacity-25 w-full p-5 rounded-lg font-normals"
+                      "flex flex-col h-24 bg-[#d8d8d8] bg-opacity-25 w-full p-5 rounded-lg font-normals",
                     )}
                   />
                 </div>
@@ -203,7 +203,7 @@ const Page = () => {
             <span
               className={cn(
                 "flex text-color text-sm font-normal pl-1 opacity-60",
-                prompt?.length === 1000 && "text-destructive font-bold"
+                prompt?.length === 1000 && "text-destructive font-bold",
               )}
             >
               You are {prompt?.length} length

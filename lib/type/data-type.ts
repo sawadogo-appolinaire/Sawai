@@ -6,7 +6,8 @@ export type contentGenerateType = {
 }[];
 
 export type audioGenerateType = {
-  who: Who;
+  id: string;
+  who: string;
   content: string;
   audioUrl: string;
 }[];
