@@ -3,6 +3,24 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import prisma from "@/lib/db";
 
+type ClerkWebhookEvent = {
+  type: string;
+  data: unknown;
+};
+
+type ClerkUserCreatedData = {
+  id: string;
+  first_name?: string | null;
+  username?: string | null;
+  email_addresses?: Array<{
+    email_address: string;
+  }>;
+};
+
+type ClerkUserDeletedData = {
+  id?: string | null;
+};
+
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
@@ -25,17 +43,16 @@ export async function POST(req: Request) {
   }
 
   const body = await req.text();
-
   const wh = new Webhook(WEBHOOK_SECRET);
 
-  let evt: any;
+  let evt: ClerkWebhookEvent;
 
   try {
     evt = wh.verify(body, {
       "svix-id": svix_id,
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature,
-    });
+    }) as ClerkWebhookEvent;
   } catch {
     return new NextResponse("Invalid webhook signature", {
       status: 400,
@@ -43,7 +60,8 @@ export async function POST(req: Request) {
   }
 
   if (evt.type === "user.created") {
-    const { id, first_name, username, email_addresses } = evt.data;
+    const data = evt.data as ClerkUserCreatedData;
+    const { id, first_name, username, email_addresses } = data;
 
     const email = email_addresses?.[0]?.email_address;
 
@@ -67,11 +85,15 @@ export async function POST(req: Request) {
   }
 
   if (evt.type === "user.deleted") {
-    await prisma.user.deleteMany({
-      where: {
-        clerkId: evt.data.id,
-      },
-    });
+    const data = evt.data as ClerkUserDeletedData;
+
+    if (data.id) {
+      await prisma.user.deleteMany({
+        where: {
+          clerkId: data.id,
+        },
+      });
+    }
   }
 
   return NextResponse.json({ success: true });

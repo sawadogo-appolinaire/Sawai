@@ -4,37 +4,43 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const user = auth();
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json("You are not authorized.", {
+        status: 401,
+      });
+    }
+
     const body = await req.json();
 
-    if (!(await user).userId) {
-      return NextResponse.json("You are not authorized to make a request.", {
-        status: 500,
+    if (!body?.name || !body?.email) {
+      return NextResponse.json("The information is empty or invalid.", {
+        status: 400,
       });
     }
 
-    if (!body) {
-      return NextResponse.json("The information is empty.", {
-        status: 500,
-      });
-    }
-
-    const data = await prisma.user.create({
-      data: {
-        id: (await user).userId as string,
-        name: body.name as string,
-        email: body.email as string,
+    const data = await prisma.user.upsert({
+      where: {
+        clerkId: userId,
+      },
+      update: {
+        name: body.name,
+        email: body.email,
+      },
+      create: {
+        clerkId: userId,
+        name: body.name,
+        email: body.email,
       },
     });
 
-    if (data) {
-      return NextResponse.json("Request succes.", { status: 200 });
-    } else {
-      return NextResponse.json("Request failed.", { status: 500 });
-    }
-  } catch (error) {
-    if (error instanceof Error) console.log(error.message);
+    return NextResponse.json({ success: true, user: data }, { status: 200 });
+  } catch (error: unknown) {
+    console.error("CREATE USER ERROR:", error);
 
-    return NextResponse.json("Request failed.", { status: 500 });
+    return NextResponse.json("Request failed.", {
+      status: 500,
+    });
   }
 }

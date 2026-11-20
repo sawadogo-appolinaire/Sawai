@@ -48,6 +48,12 @@ export async function POST(req: Request) {
         size: "1024x1024",
       });
 
+      const imageUrl = response.data?.[0]?.url;
+
+      if (!imageUrl) {
+        throw new Error("Image generation failed: no image URL returned.");
+      }
+
       const PostData = await prisma.imageGenerator.createMany({
         data: [
           {
@@ -58,7 +64,7 @@ export async function POST(req: Request) {
           {
             userId: (await user).userId as string,
             who: "Ai",
-            imageUrl: response.data[0].url as string,
+            imageUrl,
           },
         ],
       });
@@ -103,7 +109,7 @@ export async function POST(req: Request) {
     } else {
       return NextResponse.json(
         { todayRequestNumberSupTen: true },
-        { status: 200 }
+        { status: 200 },
       );
     }
   } catch (error) {

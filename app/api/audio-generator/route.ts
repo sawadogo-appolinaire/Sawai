@@ -5,23 +5,24 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const user = auth();
-    const userId = (await user).userId as string;
-    const body = await req.json();
-    const today = new Date();
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json("You are not authorized to make a request.", {
-        status: 500,
+        status: 401,
       });
     }
 
-    if (!body) {
-      return NextResponse.json("The information is empty.", {
-        status: 500,
+    const body: { prompt?: string } = await req.json();
+
+    if (!body.prompt || typeof body.prompt !== "string") {
+      return NextResponse.json("The information is empty or invalid.", {
+        status: 400,
       });
     }
+
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 
     const userRequestStatus = await prisma.user.findUnique({
       where: {
@@ -35,12 +36,12 @@ export async function POST(req: Request) {
     });
 
     if (!userRequestStatus) {
-      return NextResponse.json("User can not exist.", {
-        status: 500,
+      return NextResponse.json("User does not exist.", {
+        status: 404,
       });
     }
 
-    if ((userRequestStatus?.toDayRequest as number) < 10) {
+    if (userRequestStatus.toDayRequest < 10) {
       const audioName = await createAudioFileFromText(body.prompt);
       const audioUrl = `/user-audio-generate/${audioName}`;
 
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
           {
             userId: userRequestStatus.id,
             who: "Ai",
-            audioUrl: audioUrl,
+            audioUrl,
           },
         ],
       });
@@ -79,25 +80,32 @@ export async function POST(req: Request) {
         },
       });
 
-      return NextResponse.json("Request succes.", { status: 200 });
-    } else {
-      return NextResponse.json(
-        { todayRequestNumberSupTen: true },
-        { status: 200 },
-      );
+      return NextResponse.json("Request succes.", {
+        status: 200,
+      });
     }
-  } catch (error: any) {
+
+    return NextResponse.json(
+      { todayRequestNumberSupTen: true },
+      { status: 200 },
+    );
+  } catch (error: unknown) {
     console.error("\n========== AUDIO GENERATOR ROUTE ERROR ==========");
-    console.error("Message:", error?.message);
-    console.error("Name:", error?.name);
-    console.error("Stack:", error?.stack);
-    console.dir(error, { depth: 10 });
+
+    if (error instanceof Error) {
+      console.error("Message:", error.message);
+      console.error("Name:", error.name);
+      console.error("Stack:", error.stack);
+    } else {
+      console.error("Unknown error:", error);
+    }
+
     console.error("=================================================\n");
 
     return NextResponse.json(
       {
         error: "Request failed.",
-        details: error?.message ?? "Unknown error",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
     );
